@@ -44,9 +44,11 @@ void SocketClient::sendData(const std::map<char, int>& data) {
         serializedData += std::to_string(count);
     }
 
-    if (send(serverSocket, serializedData.c_str(), serializedData.size(), 0) < 0) {
-        std::cerr << "Ошибка: не удалось отправить данные.\n";
-    } else {
-        std::cout << "Данные успешно отправлены серверу.\n";
+    ssize_t bytesSent = send(socketFd, serializedData.c_str(), serializedData.size(), 0);
+    if (bytesSent == -1) {
+        std::cerr << "Ошибка отправки данных: " << strerror(errno) << "\n";
+        std::cerr << "Закрытие клиента...\n";
+        close(socketFd);
+        socketFd = -1;
     }
 }
