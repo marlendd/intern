@@ -7,6 +7,8 @@
 #include <string>
 #include <map>
 
+class SocketClient;
+
 class ThreadManager {
 public:
     void run();
