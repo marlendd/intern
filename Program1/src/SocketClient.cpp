@@ -10,12 +10,12 @@ SocketClient::SocketClient(const std::string& host, int port)
 
 SocketClient::~SocketClient() {
     if (clientSocket != -1) {
-        close(clientSocket); // Закрытие сокета при завершении работы
+        close(clientSocket); // закрытие сокета при завершении работы
     }
 }
 
 bool SocketClient::connectToServer() {
-    clientSocket = socket(AF_INET, SOCK_STREAM, 0); // Создаём сокет
+    clientSocket = socket(AF_INET, SOCK_STREAM, 0); // создаём сокет
     if (clientSocket < 0) {
         std::cerr << "Failed to create socket.\n";
         return false;
