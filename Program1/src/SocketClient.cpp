@@ -6,49 +6,59 @@
 #include <cstring>
 
 SocketClient::SocketClient(const std::string& host, int port)
-    : serverHost(host), serverPort(port), serverSocket(-1) {}
+    : serverHost(host), serverPort(port), clientSocket(-1) {}
+
+SocketClient::~SocketClient() {
+    if (clientSocket != -1) {
+        close(clientSocket); // Закрытие сокета при завершении работы
+    }
+}
 
 bool SocketClient::connectToServer() {
-    serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (serverSocket < 0) {
-        std::cerr << "Ошибка: не удалось создать сокет.\n";
+    clientSocket = socket(AF_INET, SOCK_STREAM, 0); // Создаём сокет
+    if (clientSocket < 0) {
+        std::cerr << "Failed to create socket.\n";
         return false;
     }
 
     sockaddr_in serverAddr{};
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(serverPort);
+
     if (inet_pton(AF_INET, serverHost.c_str(), &serverAddr.sin_addr) <= 0) {
-        std::cerr << "Ошибка: неверный адрес сервера.\n";
+        std::cerr << "Invalid address or address not supported.\n";
+        close(clientSocket);
+        clientSocket = -1;
         return false;
     }
 
-    if (connect(serverSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
-        std::cerr << "Ошибка: не удалось подключиться к серверу.\n";
+    if (connect(clientSocket, (struct sockaddr*)&serverAddr, sizeof(serverAddr)) < 0) {
+        std::cerr << "Connection failed.\n";
+        close(clientSocket);
+        clientSocket = -1;
         return false;
     }
 
-    std::cout << "Подключение к серверу установлено.\n";
+    std::cout << "Connected to server.\n";
     return true;
 }
 
 void SocketClient::sendData(const std::map<char, int>& data) {
-    if (serverSocket < 0) {
-        std::cerr << "Ошибка: сокет не открыт.\n";
+    if (clientSocket == -1) {
+        std::cerr << "Socket is not connected.\n";
         return;
     }
 
     std::string serializedData;
-    for (const auto& [ch, count] : data) {
-        serializedData += ch;
-        serializedData += std::to_string(count);
+    for (const auto& [key, value] : data) {
+        serializedData += key;
+        serializedData += std::to_string(value);
     }
 
-    ssize_t bytesSent = send(socketFd, serializedData.c_str(), serializedData.size(), 0);
-    if (bytesSent == -1) {
-        std::cerr << "Ошибка отправки данных: " << strerror(errno) << "\n";
-        std::cerr << "Закрытие клиента...\n";
-        close(socketFd);
-        socketFd = -1;
+    ssize_t bytesSent = send(clientSocket, serializedData.c_str(), serializedData.size(), 0);
+    if (bytesSent < 0) {
+        std::cerr << "Failed to send data.\n";
+    } else {
+        std::cout << "Data sent successfully.\n";
     }
 }
