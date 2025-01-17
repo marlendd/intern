@@ -6,15 +6,15 @@
 #include <algorithm>
 
 void ThreadManager::run() {
-    // Создание клиентского сокета
+    // создание клиентского сокета
     SocketClient client("127.0.0.1", 5000);
     client.connectToServer();
 
-    // Запуск потоков
+    // запуск потоков
     std::thread inputThread(&ThreadManager::handleInput, this);
     std::thread processingThread([this, &client]() { this->processData(client); });
 
-    // Ожидание завершения потоков
+    // ожидание завершения потоков
     inputThread.join();
     processingThread.join();
 }
@@ -25,25 +25,25 @@ void ThreadManager::handleInput() {
         std::cout << "Введите строку (только буквы, максимум 64 символа): ";
         std::getline(std::cin, input);
 
-        // Проверка длины строки
+        // проверка длины строки
         if (input.size() > 64) {
             std::cout << "Ошибка: строка превышает 64 символа.\n";
             continue;
         }
 
-        // Проверка на буквы
+        // проверка на буквы
         if (!std::all_of(input.begin(), input.end(), ::isalpha)) {
             std::cout << "Ошибка: строка должна содержать только буквы.\n";
             continue;
         }
 
-        // Подсчёт символов
+        // подсчёт символов
         std::map<char, int> charCount;
         for (char ch : input) {
             charCount[ch]++;
         }
 
-        // Запись в буфер
+        // запись в буфер
         {
             std::lock_guard<std::mutex> lock(bufferMutex);
             buffer = charCount;
@@ -58,13 +58,13 @@ void ThreadManager::processData(SocketClient& client) {
         std::unique_lock<std::mutex> lock(bufferMutex);
         bufferCondition.wait(lock, [this]() { return hasData; });
 
-        // Копирование данных из буфера
+        // копирование данных из буфера
         auto data = buffer;
         buffer.clear();
         hasData = false;
         lock.unlock();
         
-        // Вывод данных на экран
+        // вывод данных на экран
         std::cout << "Полученные данные:\n";
         for (const auto& [ch, count] : data) {
             std::cout << ch << ": " << count << "\n";
@@ -73,9 +73,9 @@ void ThreadManager::processData(SocketClient& client) {
             client.sendData(data);
         } catch (const std::exception& e) {
             std::cerr << "Ошибка работы с сокетом: " << e.what() << "\n";
-            break; // Прекращаем работу потока
+            break; // прекращаем работу потока
         }
-    // Отправка данных на сервер
+    // отправка данных на сервер
         client.sendData(data);
     }
 }
