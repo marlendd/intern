@@ -3,7 +3,7 @@
 #include <iostream>
 #include <cctype>
 #include <map>
-#include <algorithm> // Для std::all_of
+#include <algorithm>
 
 void ThreadManager::run() {
     // Создание клиентского сокета
@@ -63,14 +63,19 @@ void ThreadManager::processData(SocketClient& client) {
         buffer.clear();
         hasData = false;
         lock.unlock();
-
+        
         // Вывод данных на экран
         std::cout << "Полученные данные:\n";
         for (const auto& [ch, count] : data) {
             std::cout << ch << ": " << count << "\n";
         }
-
-        // Отправка данных на сервер
+        try {
+            client.sendData(data);
+        } catch (const std::exception& e) {
+            std::cerr << "Ошибка работы с сокетом: " << e.what() << "\n";
+            break; // Прекращаем работу потока
+        }
+    // Отправка данных на сервер
         client.sendData(data);
     }
 }
