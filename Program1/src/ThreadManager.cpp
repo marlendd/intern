@@ -1,9 +1,9 @@
 #include "ThreadManager.h"
 #include "SocketClient.h"
-#include <algorithm>
 #include <iostream>
 #include <cctype>
 #include <map>
+#include <algorithm> // Для std::all_of
 
 void ThreadManager::run() {
     // Создание клиентского сокета
@@ -12,7 +12,7 @@ void ThreadManager::run() {
 
     // Запуск потоков
     std::thread inputThread(&ThreadManager::handleInput, this);
-    std::thread processingThread(&ThreadManager::processData, this, std::ref(client));
+    std::thread processingThread([this, &client]() { this->processData(client); });
 
     // Ожидание завершения потоков
     inputThread.join();
