@@ -13,7 +13,7 @@ public:
 
 private:
     void handleInput();
-    void processData();
+    void processData(SocketClient& client);
 
     std::map<char, int> buffer;
     std::mutex bufferMutex;

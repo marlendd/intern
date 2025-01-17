@@ -1,5 +1,6 @@
 #include "ThreadManager.h"
 #include "SocketClient.h"
+#include <algorithm>
 #include <iostream>
 #include <cctype>
 #include <map>
